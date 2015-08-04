@@ -2,7 +2,7 @@ import requests
 import re
 import csv
 from multiprocessing import Pool, cpu_count, freeze_support
-import re
+import os
 import csv
 import sys
 
@@ -30,11 +30,18 @@ def test_url(url):
     print '\n**********************\nDomain: {}\nhttp: {}\nhttps: {}\n**************************\n'.format(*rv)
     return rv
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
 
+    return os.path.join(base_path, relative_path)
 
 def main():
-    freeze_support()
-    domains=[part for part in open('dump.txt').read().split() if len(part)>5]
+    domains=[part for part in open(resource_path('dump.txt')).read().split() if len(part)>5]
     p=Pool(cpu_count()*2)
     try:
         results=p.map(test_url, domains)
@@ -49,4 +56,6 @@ def main():
         writer.writerows(results)
 
 if __name__ == '__main__':
+    if sys.platform.startswith('win'):
+        freeze_support()
     main()
